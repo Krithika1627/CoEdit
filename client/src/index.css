@@ -1,0 +1,187 @@
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  margin: 0;
+
+  /* FONT */
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont,
+    'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+
+  /* BACKGROUND */
+  background: radial-gradient(
+    circle at top,
+    #0f172a 0%,
+    #0b1220 60%
+  );
+
+  /* TEXT */
+  color: #e5e7eb;
+
+  /* SMOOTHING */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+
+/* ===== Card ===== */
+.bg-card {
+  background-color: #455778 ;
+  border-radius: 20px;
+  border: 1px solid #5a6c8a;
+  box-shadow:
+    0 18px 40px rgba(108, 107, 107, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* ===== Heading ===== */
+.bg-card h4 {
+  color: #f1f5f9;
+  letter-spacing: 0.3px;
+}
+
+/* ===== Inputs ===== */
+.form-control {
+  background-color: #0f172a;
+  color: #e5e7eb;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.form-control::placeholder {
+  color: #94a3b8;
+  opacity: 1;
+}
+
+.form-control:focus {
+  background-color: #0f172a;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
+  color: #e5e7eb;
+}
+
+/* ===== Primary Button ===== */
+.btn-primary-custom {
+  background: linear-gradient(
+    180deg,
+    #6366f1 0%,
+    #4f46e5 100%
+  );
+  border: none;
+  color: #ffffff;
+  border-radius: 14px;
+  padding: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  box-shadow:
+    0 6px 14px rgba(79, 70, 229, 0.45);
+  transition: all 0.2s ease;
+}
+
+.btn-primary-custom:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 8px 18px rgba(79, 70, 229, 0.55);
+}
+
+/* ===== CTA text ===== */
+.text-primary {
+  color: #a5b4fc !important;
+}
+
+.text-primary:hover {
+  color: #c7d2fe !important;
+  text-decoration: underline;
+}
+
+.text {
+  color: #cbd5f5;   /* soft light slate */
+  font-size: 0.95rem;
+}
+
+/* ===== CodeMirror (Cobalt tuned) ===== */
+.CodeMirror {
+  background-color: #002240 !important; /* cobalt base */
+  color: #e5e7eb;
+  height: 100%;
+  font-size: 14px;
+  
+}
+
+/* Gutter (line numbers area) */
+.CodeMirror-gutters {
+  background-color: #001a33;
+  border-right: 1px solid #334155;
+}
+
+.CodeMirror-linenumber {
+  color: #7dd3fc;
+}
+
+/* Cursor */
+.CodeMirror-cursor {
+  border-left: 2px solid #ffffff;
+}
+
+.CodeMirror-scroll {
+  height: 100%;
+}
+
+.editor-shell {
+  height: 100%;
+  background-color: #1f2937; /* slightly lighter than page bg */
+  border-left: 1px solid #334155;
+}
+
+.btn-outline-danger {
+  color: #f87171;
+  border: 1px solid #f87171;
+  background: transparent;
+  border-radius: 14px;
+  padding: 8px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  box-shadow:
+    0 6px 14px rgba(248, 113, 113, 0.1);
+  transition: all 0.2s ease;
+}
+
+.btn-outline-danger:hover {
+  background-color: rgba(248, 113, 113, 0.1);
+  transform: translateY(-1px);
+  box-shadow:
+    0 8px 18px rgba(248, 113, 113, 0.1);
+}
+
+.sidebar {
+  border-radius: 0 !important;
+  border-right: 4px solid #ffffff;
+}
+.editor-wrapper {
+  height: 100%;
+}
+
+.client {
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.client.active {
+  background-color: rgba(99, 102, 241, 0.15);
+  border-left: 3px solid #6366f1;
+}
+
+.username-text {
+  font-size: 0.95rem;
+}
