@@ -4,6 +4,7 @@ import Editor from './Editor';
 import { initSocket } from '../socket';
 import {useNavigate, useLocation, useParams, Navigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import Chat from './Chat';
 
 function EditorPage() {
     const [clients,setClients]=useState([]);
@@ -36,6 +37,8 @@ function EditorPage() {
                 roomId,
                 username:location.state?.username,
             });
+            socketRef.current.emit("request-code", { roomId });
+
             socketRef.current.on('joined',({clients,username,socketId})=>{
                 if(username===location.state?.username){
                     toast.success('Joined room successfully :)');
@@ -44,10 +47,10 @@ function EditorPage() {
                     toast.success(`${username} joined`);
                 }
                 setClients([...clients]);
-                socketRef.current.emit('sync-code',{
-                    code:codeRef.current,
-                    socketId,
-                });
+
+                if (socketId === socketRef.current.id) {
+                    socketRef.current.emit("request-code", { roomId });
+                }
             });
 
             socketRef.current.on('user-typing',({socketId})=>{
@@ -128,7 +131,17 @@ function EditorPage() {
             {/*editor*/}
             <div className='col-md-9 col-lg-10 d-flex flex-column h-100 p-0'>
                 <div className="editor-shell h-100">
-                    <Editor socketRef={socketRef} roomId={roomId} onCodeChange={(code)=>codeRef.current=code}/>
+                {socketRef.current && (
+                    <Editor
+                        socketRef={socketRef}
+                        roomId={roomId}
+                        onCodeChange={(code) => (codeRef.current = code)}
+                    />
+                )}
+                </div>
+
+                <div className='chat-section'>
+                    <Chat socketRef={socketRef} roomId={roomId} />
                 </div>
             </div>
         </div> 

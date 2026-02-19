@@ -1,79 +1,139 @@
-const express=require("express");
-const app=express();
-const http=require('http');
-const {Server} =require('socket.io');
+const express = require("express");
+const app = express();
+const http = require("http");
+const { Server } = require("socket.io");
 
-const server=http.createServer(app);
-const io=new Server(server);
+const server = http.createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
+});
 
-const userScocketMap={};
+const mongoose = require("mongoose");
 
-const getAllConnectedClients=(roomId)=>{
+mongoose.connect("mongodb://127.0.0.1:27017/coedit");
+
+mongoose.connection.on("connected", () => {
+    console.log("MongoDB connected");
+});
+
+mongoose.connection.on("error", (err) => {
+    console.log("MongoDB error:", err);
+});
+
+const Room = require("./Room");
+
+const userSocketMap = {};
+
+const getAllConnectedClients = (roomId) => {
     return Array.from(io.sockets.adapter.rooms.get(roomId) || []).map(
-        (socketId)=>{
-            return{
+        (socketId) => {
+            return {
                 socketId,
-                username:userScocketMap[socketId],
-            }
+                username: userSocketMap[socketId],
+            };
         }
     );
-}
+};
 
-io.on('connection',(socket)=>{
-    //console.log(`User connected: ${socket.id}`);
+io.on("connection", (socket) => {
 
-    socket.on('join',({roomId,username})=>{
-        const clients=getAllConnectedClients(roomId);
+    socket.on("join", async({ roomId, username }) => {
+        console.log("User joining:", roomId, username); // ADD THIS
 
-        const usernameTaken=clients.some((client)=>client.username===username);
-        if(usernameTaken){
-            socket.emit('username-error',{
-                message:'Username already taken',
+        const clients = getAllConnectedClients(roomId);
+
+        const usernameTaken = clients.some(
+            (client) => client.username === username
+        );
+
+        if (usernameTaken) {
+            socket.emit("username-error", {
+                message: "Username already taken",
             });
             return;
         }
 
-        userScocketMap[socket.id]=username;
-        socket.join(roomId);
+        userSocketMap[socket.id] = username;
         
-        //console.log(clients);
-        //notify other users that a new user has joined
-        const updatedClients=getAllConnectedClients(roomId);
-        updatedClients.forEach(({socketId})=>{
-            io.to(socketId).emit('joined',{
-                clients:updatedClients,
+        socket.join(roomId);
+
+        const updatedClients = getAllConnectedClients(roomId);
+
+        updatedClients.forEach(({ socketId }) => {
+            io.to(socketId).emit("joined", {
+                clients: updatedClients,
                 username,
-                socketId:socket.id,
+                socketId: socket.id,
             });
         });
     });
 
-    socket.on('code-change',({roomId,code})=>{
-        socket.in(roomId).emit('code-change',{code});
+    socket.on("code-change", async ({ roomId, code }) => {
+        console.log("Code change from:", socket.id, "Room:", roomId);
+    
+        try {
+            await Room.findOneAndUpdate(
+                { roomId },
+                { $set: { code } },
+                { upsert: true, new: true }
+            );
+    
+            socket.to(roomId).emit("code-change", { code });
+    
+        } catch (error) {
+            console.log("Error saving code:", error);
+        }
     });
+    
+    
+    socket.on("request-code", async ({ roomId }) => {
+        console.log("Request-code received for:", roomId);
 
-    socket.on('sync-code',({socketId,code})=>{
-        io.to(socketId).emit('code-change',{code});
+        try {
+            const room = await Room.findOne({ roomId });
+            console.log("DB result:", room);
+
+            if (room) {
+                socket.emit("load-code", { code: room.code });
+            }
+        } catch (error) {
+            console.log("Error fetching room:", error);
+        }
     });
+    
 
-    socket.on('user-typing',({roomId})=>{
-        socket.to(roomId).emit('user-typing',{
-            socketId:socket.id,
+    socket.on("user-typing", ({ roomId }) => {
+        socket.to(roomId).emit("user-typing", {
+            socketId: socket.id,
         });
     });
 
-    socket.on('disconnecting',()=>{
-        const rooms=[...socket.rooms];
-        rooms.forEach((roomId)=>{
-            socket.in(roomId).emit('disconnected',{
-                socketId:socket.id,
-                username:userScocketMap[socket.id],
+    socket.on("disconnecting", () => {
+        const rooms = [...socket.rooms];
+
+        rooms.forEach((roomId) => {
+            socket.in(roomId).emit("disconnected", {
+                socketId: socket.id,
+                username: userSocketMap[socket.id],
             });
         });
-        delete userScocketMap[socket.id];
-        socket.leave();
+
+        delete userSocketMap[socket.id];
+    });
+
+    socket.on("send-message", ({ roomId, message }) => {
+        const username = userSocketMap[socket.id];
+
+        io.to(roomId).emit("receive-message", {
+            username,
+            message,
+            time: new Date().toLocaleTimeString(),
+        });
     });
 });
 
-const PORT=process.env.PORT || 5001;
-server.listen(PORT,()=>console.log('server is running'));
+const PORT = process.env.PORT || 5001;
+server.listen(PORT, () => console.log("server is running"));
