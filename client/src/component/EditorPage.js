@@ -15,6 +15,13 @@ function EditorPage() {
     const codeRef=useRef(null);
     const [activeUsers,setActiveUsers]=useState({});
 
+    const [language, setLanguage] = useState(63);
+    const [output, setOutput] = useState("");
+
+    const [socketReady, setSocketReady] = useState(false);
+
+    const [running, setRunning] = useState(false);
+
     useEffect(()=>{
         const init= async ()=>{
             socketRef.current=await initSocket();
@@ -77,6 +84,7 @@ function EditorPage() {
                     )
                 })
             });
+            setSocketReady(true);   
         };
         init();
 
@@ -86,6 +94,37 @@ function EditorPage() {
             socketRef.current.off('disconnected');
         }
     },[]);
+
+    const runCode = async () => {
+
+        setRunning(true); 
+
+        try {
+            const res = await fetch("http://localhost:5001/compile", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    code: codeRef.current,
+                    language_id: language,
+                }),
+            });
+    
+            const data = await res.json();
+    
+            setOutput(
+                data.stdout ||
+                data.stderr ||
+                data.compile_output ||
+                "No output"
+            );
+    
+        } catch (err) {
+            setOutput("Compilation error");
+        }
+        setRunning(false);
+    };    
 
     if(!location.state){
         return <Navigate to='/'/>
@@ -128,22 +167,61 @@ function EditorPage() {
                 </div>
             </div>
 
-            {/*editor*/}
-            <div className='col-md-9 col-lg-10 d-flex flex-column h-100 p-0'>
-                <div className="editor-shell h-100">
-                {socketRef.current && (
-                    <Editor
-                        socketRef={socketRef}
-                        roomId={roomId}
-                        onCodeChange={(code) => (codeRef.current = code)}
-                    />
-                )}
+            {/* MAIN RIGHT AREA */}
+            <div className="col-md-9 col-lg-10 main-editor-area p-0">
+
+            {/* TOP SECTION (Editor + Output) */}
+            <div className="top-section">
+
+                {/* EDITOR SIDE */}
+                <div className="editor-layout">
+
+                    <div className="compiler-toolbar">
+                        <select
+                            value={language}
+                            onChange={(e) => setLanguage(Number(e.target.value))}
+                        >
+                            <option value={63}>JavaScript</option>
+                            <option value={71}>Python</option>
+                            <option value={54}>C++</option>
+                            <option value={62}>Java</option>
+                            <option value={50}>C</option>
+                        </select>
+
+                        <button onClick={runCode} disabled={running}>
+                            {running ? "Running..." : "Run Code"}
+                        </button>
+                    </div>
+
+                    <div className="editor-container">
+                        {socketReady && (
+                            <Editor
+                                socketRef={socketRef}
+                                roomId={roomId}
+                                onCodeChange={(code) => (codeRef.current = code)}
+                            />
+                        )}
+                    </div>
+
                 </div>
 
-                <div className='chat-section'>
-                    <Chat socketRef={socketRef} roomId={roomId} />
+                {/* OUTPUT PANEL (RIGHT SIDE) */}
+                <div className="output-panel">
+                    <h6>Output</h6>
+                    <pre>{output}</pre>
                 </div>
+
             </div>
+
+            {/* CHAT BOTTOM */}
+                <div className="chat-section">
+                    {socketReady && (
+                        <Chat socketRef={socketRef} roomId={roomId} />
+                    )}
+                </div>
+
+            </div>
+
         </div> 
     </div>
   )

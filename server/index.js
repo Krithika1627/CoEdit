@@ -3,6 +3,9 @@ const app = express();
 const http = require("http");
 const { Server } = require("socket.io");
 
+const cors = require("cors");
+app.use(cors());
+
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
@@ -137,3 +140,31 @@ io.on("connection", (socket) => {
 
 const PORT = process.env.PORT || 5001;
 server.listen(PORT, () => console.log("server is running"));
+
+
+
+const axios = require("axios");
+
+app.use(express.json());
+
+app.post("/compile", async (req, res) => {
+    const { code, language_id } = req.body;
+
+    try {
+        // 1️⃣ submit code
+        const submission = await axios.post(
+            "https://ce.judge0.com/submissions?base64_encoded=false&wait=true",
+            {
+                source_code: code,
+                language_id: language_id,
+            }
+        );
+
+        res.json(submission.data);
+
+    } catch (err) {
+        console.log(err.message);
+        res.status(500).json({ error: "Compilation failed" });
+    }
+});
+
