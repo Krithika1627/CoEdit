@@ -8,5 +8,8 @@ export const initSocket = async () => {
         transports: ["websocket"],
     };
 
-    return io("https://coedit-clyc.onrender.com", options);
+    const BACKEND_URL =
+        process.env.REACT_APP_BACKEND_URL || "https://coedit-clyc.onrender.com";
+
+    return io(BACKEND_URL, options);
 };
