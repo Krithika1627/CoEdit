@@ -8,5 +8,5 @@ export const initSocket = async () => {
         transports: ["websocket"],
     };
 
-    return io("http://localhost:5001", options);
+    return io("https://coedit-clyc.onrender.com", options);
 };
